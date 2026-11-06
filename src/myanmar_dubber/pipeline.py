@@ -38,14 +38,14 @@ def speech_slots(
 class DubbingPipeline:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
-        self.openai = AsyncOpenAI(
-            api_key=settings.openai_api_key,
-            base_url=settings.openai_base_url,
+        self.groq = AsyncOpenAI(
+            api_key=settings.groq_api_key,
+            base_url=settings.groq_base_url,
             timeout=180.0,
             max_retries=2,
         )
-        self.transcriber = Transcriber(self.openai, settings.whisper_model)
-        self.translator = Translator(self.openai, settings.translation_model)
+        self.transcriber = Transcriber(self.groq, settings.whisper_model)
+        self.translator = Translator(self.groq, settings.translation_model)
         self.speech = MyanmarSpeech(settings.tts_rate)
         self.media = MediaProcessor(settings.ffmpeg_timeout_seconds)
         self.youtube = YouTubeDownloader(
@@ -119,6 +119,7 @@ class DubbingPipeline:
             clips=clips,
             duration=info.duration,
             video_codec=info.video_codec,
+            enhance=self.settings.video_enhance,
         )
 
         if output.stat().st_size > self.settings.max_output_bytes:

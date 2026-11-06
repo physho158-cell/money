@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from openai import RateLimitError
 from telegram import BotCommand, Update
 from telegram.error import TelegramError
 from telegram.ext import (
@@ -37,7 +38,7 @@ YouTube Shorts / YouTube video link (သို့) video file ကို ဒီ�
 /voice female — အမျိုးသမီးအသံ
 /help — အသုံးပြုနည်း
 
-တစ်ခါတည်း ဗီဒီယိုတစ်ခုသာ လုပ်ဆောင်နိုင်ပြီး၊ API ကုန်ကျစရိတ်ကို ထိန်းရန် ကြာချိန်ကန့်သတ်ချက် ရှိပါတယ်။
+တစ်ခါတည်း ဗီဒီယိုတစ်ခုသာ လုပ်ဆောင်နိုင်ပြီး၊ free API quota ကို ထိန်းရန် ကြာချိန်ကန့်သတ်ချက် ရှိပါတယ်။
 """
 
 _VOICE_ALIASES = {
@@ -332,6 +333,12 @@ class TelegramDubbingBot:
             await progress("✅ ပြီးဆုံးပါပြီ။ အောက်ကဗီဒီယိုကို စစ်ကြည့်ပါ။")
         except UserFacingError as exc:
             await progress(f"❌ {exc}")
+        except RateLimitError:
+            logger.warning("Groq free quota reached for job %s", job.job_id)
+            await progress(
+                "❌ Groq free quota ခေတ္တပြည့်နေပါတယ်။ ခဏစောင့်ပြီး ထပ်စမ်းပါ။ "
+                "Paid plan ကို အလိုအလျောက် မပြောင်းထားပါဘူး။"
+            )
         except TelegramError:
             logger.exception("Telegram operation failed for job %s", job.job_id)
             await progress("❌ Telegram ချိတ်ဆက်မှုအခက်အခဲကြောင့် Job မပြီးဆုံးနိုင်ပါ။")
@@ -364,5 +371,6 @@ def create_application(settings: Settings) -> Application:
         .post_shutdown(service.stop)
         .build()
     )
+    application.bot_data["dubbing_service"] = service
     service.register(application)
     return application

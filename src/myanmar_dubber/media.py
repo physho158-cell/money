@@ -122,6 +122,7 @@ class MediaProcessor:
         clips: list[SpeechClip],
         duration: float,
         video_codec: str,
+        enhance: bool = False,
     ) -> None:
         if not clips:
             raise ValueError("At least one speech clip is required.")
@@ -165,7 +166,16 @@ class MediaProcessor:
         )
         command.extend(["-filter_complex", ";".join(filters)])
         command.extend(["-map", "0:v:0", "-map", "[dubbed]", "-sn", "-dn"])
-        if video_codec == "h264":
+        if enhance:
+            command.extend(
+                [
+                    "-vf",
+                    "hqdn3d=1.2:1.2:3:3,"
+                    "unsharp=5:5:0.45:3:3:0.0,"
+                    "eq=contrast=1.03:saturation=1.05",
+                ]
+            )
+        if video_codec == "h264" and not enhance:
             command.extend(["-c:v", "copy"])
         else:
             command.extend(
@@ -175,7 +185,7 @@ class MediaProcessor:
                     "-preset",
                     "veryfast",
                     "-crf",
-                    "23",
+                    "19" if enhance else "23",
                     "-pix_fmt",
                     "yuv420p",
                 ]
