@@ -34,6 +34,12 @@ def main() -> None:
     except OSError as exc:
         raise SystemExit(f"Configuration error: cannot create WORK_DIR: {exc}") from exc
 
+    if settings.app_mode == "webhook":
+        from .web import run_webhook_server
+
+        run_webhook_server(settings)
+        return
+
     application = create_application(settings)
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 

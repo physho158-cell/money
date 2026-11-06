@@ -54,7 +54,7 @@ class FakeSpeech:
 
 def _pipeline(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> DubbingPipeline:
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "telegram-test-token")
-    monkeypatch.setenv("OPENAI_API_KEY", "openai-test-token")
+    monkeypatch.setenv("GROQ_API_KEY", "groq-test-token")
     settings = Settings.from_env()
     pipeline = DubbingPipeline(settings)
     pipeline.media = FakeMedia()  # type: ignore[assignment]

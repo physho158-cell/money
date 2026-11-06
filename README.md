@@ -1,84 +1,103 @@
 # Myanmar Video Dubbing Telegram Bot
 
-YouTube Shorts / YouTube video link သို့မဟုတ် Telegram တွင် တင်ထားသော video ကို လက်ခံပြီး၊ မူရင်းအသံအားလုံးကို ဖယ်ထုတ်ကာ **မြန်မာလို ဘာသာပြန်ထားသော AI အသံအသစ်ပါသော MP4** ကို ပြန်ပေးသော Telegram bot ဖြစ်သည်။
+YouTube Shorts / YouTube link သို့မဟုတ် Telegram video upload ကို လက်ခံပြီး မူရင်းအသံအားလုံးကို ဖယ်ကာ **မြန်မာလို AI dubbing ပါသော MP4** ပြန်ပေးသော bot ဖြစ်သည်။ ဤ version တွင် **OpenAI/Gemini မလိုအပ်ဘဲ** free-quota Groq API ကို transcription/translation အတွက် အသုံးပြုထားသည်။
 
-## လုပ်ဆောင်ပုံ
+## Features
 
-1. `yt-dlp` ဖြင့် YouTube video ကို ဒေါင်းလုဒ်လုပ်သည် (Telegram upload ကိုလည်း လက်ခံသည်)။
-2. `ffmpeg` ဖြင့် မူရင်းအသံကို ခွဲထုတ်သည်။
-3. OpenAI Whisper ဖြင့် အချိန်မှတ်သားထားသော transcript လုပ်သည်။
-4. OpenAI chat model ဖြင့် segment တစ်ခုချင်းကို သဘာဝကျသော မြန်မာစကားပြေအဖြစ် ဘာသာပြန်သည်။
-5. Microsoft Edge TTS ၏ `Nilar` (အမျိုးသမီး) သို့မဟုတ် `Thiha` (အမျိုးသား) Myanmar voice ဖြင့် အသံထုတ်သည်။
-6. အသံအချိန်ကို မူရင်း segment များနှင့် ညှိပြီး မူရင်းအသံအားလုံးကို အစားထိုးကာ MP4 အဖြစ် Telegram သို့ ပြန်ပို့သည်။
+- Groq `whisper-large-v3-turbo` ဖြင့် timestamped transcription
+- Groq chat model ဖြင့် မြန်မာစကားပြေ dubbing script
+- Edge TTS `my-MM-ThihaNeural` (ယောက်ျားလေးအသံ — default) သို့မဟုတ် `my-MM-NilarNeural`
+- မူရင်း audio အားလုံးကို Myanmar dub အသစ်ဖြင့် အစားထိုးခြင်း
+- Lightweight video enhancement: denoise, sharpen, contrast/saturation adjustment
+- Queue, progress updates, access control, size limits, temporary-file cleanup
+- Local development အတွက် Telegram long polling
+- Render Free Web Service အတွက် FastAPI health endpoint + Telegram webhook
+- Groq free quota ပြည့်လျှင် paid fallback မလုပ်ဘဲ အသိပေးခြင်း
 
-> **သတိ:** မူရင်း narration အပြင် background music အပါအဝင် မူရင်း audio အားလုံးကို ဖယ်ထုတ်သည်။ Background music ကို ထိန်းထားလိုလျှင် vocal separation module ထပ်ထည့်ရန် လိုသည်။ Lip-sync မဟုတ်ဘဲ speech timing ကို ညှိထားသော AI dubbing ဖြစ်သည်။
+> Video enhancement သည် AI super-resolution မဟုတ်ဘဲ free/low-CPU FFmpeg filters ဖြစ်သည်။ မူရင်း background music အပါအဝင် မူရင်း audio အားလုံးကို ဖယ်ထုတ်သည်။ Lip-sync မဟုတ်ဘဲ speech timing ကို ညှိထားသည်။
 
-## လိုအပ်သည်များ
+## API keys and links
 
-- Docker နှင့် Docker Compose (အလွယ်ဆုံးနည်းလမ်း)
-- Telegram bot token — `@BotFather` တွင် `/newbot` ဖြင့် ဖန်တီးရယူပါ
-- OpenAI API key နှင့် billing — transcription/translation အတွက် အသုံးပြုသည်
-- Internet connection — Telegram, YouTube, OpenAI နှင့် Edge TTS သို့ ချိတ်ဆက်ရန် လိုသည်
+| Service | Link | Required |
+|---|---|---|
+| Telegram BotFather | https://t.me/BotFather | `TELEGRAM_BOT_TOKEN` ရရန် |
+| Groq API Keys | https://console.groq.com/keys | Free `GROQ_API_KEY` ရရန် |
+| Groq plan/billing | https://console.groq.com/settings/billing | Free plan/limits စစ်ရန် |
+| Render Dashboard | https://dashboard.render.com/ | Web Service deploy ရန် |
 
-## Docker ဖြင့် စတင်ရန်
+OpenAI key၊ Gemini key၊ paid billing account တို့ မလိုအပ်ပါ။ Free quotas များက unlimited မဟုတ်သဖြင့် provider account တွင် လက်ရှိ limits ကို စစ်ဆေးပါ။
 
-```bash
-cp .env.example .env
-```
+## Render Free Web Service deployment
 
-`.env` ထဲတွင် အနည်းဆုံး အောက်ပါတန်ဖိုးများကို ဖြည့်ပါ။
+**Background Worker မရွေးပါနှင့်။** New → **Web Service** → **Free** compute plan ကို ရွေးပါ။
+
+### 1. Repository settings
+
+| Setting | Value |
+|---|---|
+| Repository | `physho158-cell/money` |
+| Branch | `main` (ဤ changes များ merge ပြီးနောက်) |
+| Language / Runtime | `Docker` |
+| Root Directory | blank |
+| Dockerfile Path | `./Dockerfile` |
+| Compute plan | **Free** |
+| Health Check Path | `/health` |
+| Instance Count | `1` |
+
+Docker command ကို blank ထားပါ။ Dockerfile ၏ `CMD ["python", "-m", "myanmar_dubber"]` ကို အသုံးပြုပါမည်။ `docker-compose.yml` ကို Render တွင် အသုံးပြုရန် မလိုပါ။
+
+### 2. Environment variables
 
 ```dotenv
 TELEGRAM_BOT_TOKEN=your_botfather_token
-OPENAI_API_KEY=your_openai_api_key
+GROQ_API_KEY=your_groq_free_api_key
+APP_MODE=webhook
+WEBHOOK_URL=https://your-service.onrender.com
+GROQ_WHISPER_MODEL=whisper-large-v3-turbo
+GROQ_TRANSLATION_MODEL=openai/gpt-oss-120b
+DEFAULT_VOICE=my-MM-ThihaNeural
+TTS_RATE=+0%
+VIDEO_ENHANCE=true
+MAX_VIDEO_SECONDS=60
+MAX_DOWNLOAD_MB=50
+MAX_OUTPUT_MB=45
+MAX_QUEUE_SIZE=5
+WORKERS=1
+WORK_DIR=/tmp/myanmar-dubber
+FFMPEG_TIMEOUT_SECONDS=600
+ALLOWED_USER_IDS=
+LOG_LEVEL=INFO
 ```
 
-ပြီးလျှင်—
+- `WEBHOOK_URL` တွင် Render service ၏ အမှတတ瓷牙 URL ကို အသုံးပြုပါ။ `RENDER_EXTERNAL_URL` ရှိလျှင် app က fallback အနေဖြင့် အသုံးပြုနိုင်သည်။
+- `PORT` ကို Render က auto ပေးသောကြောင့် မထည့်ပါနှင့်။
+- `WEBHOOK_SECRET` မထည့်လည်း app က bot token မှ secret ကို derive လုပ်သည်။ Custom secret လိုလျှင် ထည့်နိုင်သည်။
+- Public bot မဖွင့်မီ `ALLOWED_USER_IDS=123456789,987654321` ဖြင့် အသုံးပြုခွင့်ကို ကန့်သတ်ပါ။
+- YouTube cookies မလိုသေးလျှင် `YTDLP_COOKIES_FILE` မထည့်ပါနှင့်။
 
-```bash
-docker compose up -d --build
-docker compose logs -f bot
+### 3. Deploy and verify
+
+1. **Create Web Service / Deploy** နှိပ်ပါ။
+2. Build log တွင် FFmpeg နှင့် Python packages install ဖြစ်သည်ကို စစ်ပါ။
+3. Browser တွင် `https://your-service.onrender.com/health` ကို ဖွင့်ပါ။
+
+```json
+{"status":"ok","webhook_configured":true,"mode":"webhook"}
 ```
 
-Token များ၊ API key များကို Git သို့ မထည့်ပါနှင့်။ `.env` ကို `.gitignore` တွင် ကြိုတင်ပိတ်ထားပြီးဖြစ်သည်။
+4. `webhook_configured` မှာ `false` ဖြစ်နေလျှင် `WEBHOOK_URL` ကို service URL အမှန်ဖြင့် ထည့်ပြီး redeploy/restart လုပ်ပါ။
+5. Log တွင် `Telegram webhook registered` ပါရပါမည်။
 
-## Bot အသုံးပြုနည်း
+### 4. Telegram test
 
-Telegram တွင် bot ၏ private chat သို့ သွားပြီး—
+```text
+/start
+/voice male
+```
 
-- `/start` — အသုံးပြုနည်းစတင်ကြည့်ရန်
-- `/voice female` — Nilar အမျိုးသမီးအသံ ရွေးရန်
-- `/voice male` — Thiha အမျိုးသားအသံ ရွေးရန်
-- YouTube Shorts / watch link တစ်ခုလုံးကို ပို့ပါ၊ ဥပမာ `https://youtube.com/shorts/VIDEO_ID`
-- သို့မဟုတ် MP4, MOV, MKV, WebM video ကို Telegram တွင် တင်ပို့ပါ
+ပြီးလျှင် တိုတောင်းသော Shorts link သို့မဟုတ် Telegram video file ကို ပို့ပါ။ `/voice female` ဖြင့် Nilar အသံသို့ ပြောင်းနိုင်သည်။
 
-Bot သည် queue အမှတ်စဉ်၊ download/transcription/translation/TTS/upload အခြေအနေများကို message တစ်ခုတည်းတွင် ပြပြီး၊ ပြီးဆုံးလျှင် dubbed video ကို ပြန်ပို့သည်။ တစ်ယောက်လျှင် တစ်ခါတည်း job တစ်ခုသာ လုပ်ဆောင်နိုင်သည်။
-
-## Configuration
-
-| Variable | Default | ရှင်းလင်းချက် |
-|---|---:|---|
-| `TELEGRAM_BOT_TOKEN` | — | BotFather token (လိုအပ်သည်) |
-| `OPENAI_API_KEY` | — | OpenAI API key (လိုအပ်သည်) |
-| `OPENAI_BASE_URL` | OpenAI | OpenAI-compatible endpoint လိုလျှင် သုံးနိုင်သည် |
-| `WHISPER_MODEL` | `whisper-1` | Speech-to-text model |
-| `TRANSLATION_MODEL` | `gpt-4o-mini` | JSON mode ပါသော translation model |
-| `DEFAULT_VOICE` | `my-MM-NilarNeural` | Default Myanmar voice |
-| `TTS_RATE` | `+0%` | Edge TTS အသံအရှိန်၊ ဥပမာ `+5%` |
-| `MAX_VIDEO_SECONDS` | `180` | တစ်ခုလျှင် အများဆုံး video ကြာချိန် |
-| `MAX_DOWNLOAD_MB` | `100` | Source file အရွယ်အစား ကန့်သတ်ချက် |
-| `MAX_OUTPUT_MB` | `49` | Telegram upload အတွက် output ကန့်သတ်ချက် |
-| `MAX_QUEUE_SIZE` | `20` | စောင့်ဆိုင်းနိုင်သော job အရေအတွက် |
-| `WORKERS` | `1` | တစ်ပြိုင်နက် processing worker အရေအတွက် |
-| `WORK_DIR` | `/tmp/myanmar-dubber` | ယာယီ processing directory |
-| `FFMPEG_TIMEOUT_SECONDS` | `900` | ffmpeg/ffprobe timeout |
-| `ALLOWED_USER_IDS` | empty | Comma-separated Telegram numeric user IDs; empty ဆိုလျှင် public |
-| `YTDLP_COOKIES_FILE` | empty | YouTube cookies ဖိုင်လမ်းကြောင်း (optional) |
-| `LOG_LEVEL` | `INFO` | Logging level |
-
-Public bot အဖြစ် ဖွင့်ထားလျှင် သင့်ပေးဆပ်ရသော OpenAI API ကုန်ကျစရိတ် တိုးနိုင်သောကြောင့် `ALLOWED_USER_IDS` ဖြင့် အသုံးပြုခွင့်ကို ကန့်သတ်ထားခြင်း ပိုလုံခြုံသည်။ Job တစ်ခုပြီးတိုင်း source/audio/output ယာယီဖိုင်များကို အလိုအလျောက် ဖျက်သည်။
-
-YouTube hosting IP တွင် download ပိတ်ခံလျှင် video ကို Telegram upload အနေနဲ့ လက်ခံနိုင်သည်။ လိုအပ်သောအခါ Netscape format cookies file ကို server သို့ secure အနေဖြင့် mount ပြီး `YTDLP_COOKIES_FILE` သတ်မှတ်နိုင်သည်။ Cookies ဖိုင်ကို Git တွင် မသိမ်းပါနှင့်။
+Render Free Web Service သည် inbound traffic မရှိဘဲ ၁၅ မိနစ်ကြာလျှင် spin down ဖြစ်ပြီး နောက် request ရောက်လာလျှင် ပြန်စတင်ရန် ခန့်စောင့်ရနိုင်သည်။ ပထမ `/start` မဖြေခင် cold start ပြီးအောင် စောင့်ပြီး ပြန်ပို့ကြည့်ပါ။ Deploy/restart/spin down ဖြစ်လျှင် in-memory queue နှင့် လက်ရှိ job များ ပျက်နိုင်သည်။
 
 ## Local development
 
@@ -89,8 +108,18 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'
 cp .env.example .env
-# .env တွင် token များ ဖြည့်ပြီးနောက်
+# .env ထဲတွင် TELEGRAM_BOT_TOKEN နှင့် GROQ_API_KEY ဖြည့်ပါ
+# Local development အတွက် APP_MODE=polling ထားပါ
 python -m myanmar_dubber
+```
+
+Docker Compose ဖြင့်လည်း polling mode run နိုင်သည်—
+
+```bash
+cp .env.example .env
+# .env ဖြည့်ပြီးနောက်
+docker compose up -d --build
+docker compose logs -f bot
 ```
 
 Automated checks:
@@ -100,9 +129,27 @@ pytest
 ruff check .
 ```
 
-## ကန့်သတ်ချက်များနှင့် တာဝန်
+## Configuration reference
 
-- AI transcription/translation/dubbing တွင် အမှားအယွင်း ရှိနိုင်သဖြင့် အရေးကြီးသည့်အကြောင်းအရာများကို လူက ပြန်စစ်ဆေးသင့်သည်။
-- Whisper, translation API နှင့် Edge TTS အတွက် external services ကို အသုံးပြုထားသောကြောင့် network/provider အပြောင်းအလဲက သက်ရောက်နိုင်သည်။ OpenAI usage ကို provider စျေးနှုန်းအတိုင်း ပေးဆပ်ရသည်။
-- Telegram Bot API ၏ file size ကန့်သတ်ချက်ကြောင့် output ကို လိုအပ်လျှင် ပြန်ချုံ့သည်။ ပိုရှည်သော/ကြီးသော video များကို default configuration တွင် ငြင်းဆန်နိုင်သည်။
-- YouTube download ပြုလုပ်ရာတွင် YouTube ၏ Terms of Service နှင့် ဒေသဆိုင်ရာဥပဒေများကို လိုက်နာပါ။ ခွင့်ပြုချက်မရှိသော copyright content ကို မန်မျှဝေရန်/ပြန်လည်အသုံးပြုရန် ဤ code က ခွင့်ပြုချက် မပေးပါ။
+| Variable | Default (code) | Description |
+|---|---:|---|
+| `GROQ_WHISPER_MODEL` | `whisper-large-v3-turbo` | Groq transcription model |
+| `GROQ_TRANSLATION_MODEL` | `openai/gpt-oss-120b` | Groq translation model; Qwen model ဖြင့် ပြောင်းစမ်းနိုင်သည် |
+| `DEFAULT_VOICE` | `my-MM-ThihaNeural` | Default Myanmar male voice |
+| `VIDEO_ENHANCE` | `true` | Lightweight denoise/sharpen/colour enhancement |
+| `APP_MODE` | `polling` | `polling` or `webhook` |
+| `WEBHOOK_URL` | `RENDER_EXTERNAL_URL` fallback | Public base URL; no trailing path needed |
+| `WEBHOOK_SECRET` | derived from bot token | Telegram webhook header validation |
+| `PORT` | `10000` | Web server port; Render sets automatically |
+| `MAX_VIDEO_SECONDS` | `180` | Maximum video duration; `.env.example` uses 60 for free tier |
+| `MAX_DOWNLOAD_MB` | `100` | Source size limit; `.env.example` uses 50 |
+| `MAX_OUTPUT_MB` | `49` | Telegram output limit; `.env.example` uses 45 |
+| `WORKERS` | `1` | Internal processing workers; keep at 1 on free Render |
+
+## Limitations and safety
+
+- Groq free quota နှင့် Edge TTS availability က provider အပြောင်းအလဲအလိုက် သက်ရောက်နိုင်သည်။ Bot သည် quota ပြည့်လျှင် paid plan သို့ auto-switch မလုပ်ပါ။
+- Audio/transcript ကို Groq သို့လည်းကောင်း၊ မြန်မာစာသားကို Edge TTS သို့လည်းကောင်း ပေးပို့သည်။ Private/sensitive content မတင်ပါနှင့်။
+- YouTube download ပိတ်ခံရလျှင် Telegram upload ကို အသုံးပြုနိုင်သည်။ Cookies လိုအပ်လာလျှင် secure secret file အနေဖြင့် သီးသန့်ပြင်ဆင်ပါ။
+- ကိုယ်ပိုင် သို့မဟုတ် ခွင့်ပြုချက်ရထားသော content ကိုသာ အသုံးပြုပါ။ YouTube/TikTok terms နှင့် copyright ကို လိုက်နာပါ။
+- **TikTok direct posting သည် ဤ version တွင် မပါဝင်သေးပါ။** Official Content Posting API ၏ `video.publish` approval၊ OAuth နှင့် refresh-token rotation အတွက် persistent secure token storage လိုအပ်သည်။ Unaudited clients ၏ posts များလည်း private-only ဖြစ်နိုင်သည်။
