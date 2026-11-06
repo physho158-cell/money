@@ -103,7 +103,7 @@ class Settings:
 
         cookies = os.getenv("YTDLP_COOKIES_FILE", "").strip() or None
         max_video_seconds = _positive_int("MAX_VIDEO_SECONDS", 180)
-        max_download_mb = _positive_int("MAX_DOWNLOAD_MB", 100)
+        max_download_mb = _positive_int("MAX_DOWNLOAD_MB", 300)
         max_output_mb = _positive_int("MAX_OUTPUT_MB", 49)
 
         return cls(

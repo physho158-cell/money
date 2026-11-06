@@ -58,13 +58,13 @@ GROQ_TRANSLATION_MODEL=openai/gpt-oss-120b
 DEFAULT_VOICE=my-MM-ThihaNeural
 TTS_RATE=+0%
 VIDEO_ENHANCE=true
-MAX_VIDEO_SECONDS=60
-MAX_DOWNLOAD_MB=50
+MAX_VIDEO_SECONDS=120
+MAX_DOWNLOAD_MB=300
 MAX_OUTPUT_MB=45
 MAX_QUEUE_SIZE=5
 WORKERS=1
 WORK_DIR=/tmp/myanmar-dubber
-FFMPEG_TIMEOUT_SECONDS=600
+FFMPEG_TIMEOUT_SECONDS=900
 ALLOWED_USER_IDS=
 LOG_LEVEL=INFO
 ```
@@ -141,8 +141,8 @@ ruff check .
 | `WEBHOOK_URL` | `RENDER_EXTERNAL_URL` fallback | Public base URL; no trailing path needed |
 | `WEBHOOK_SECRET` | derived from bot token | Telegram webhook header validation |
 | `PORT` | `10000` | Web server port; Render sets automatically |
-| `MAX_VIDEO_SECONDS` | `180` | Maximum video duration; `.env.example` uses 60 for free tier |
-| `MAX_DOWNLOAD_MB` | `100` | Source size limit; `.env.example` uses 50 |
+| `MAX_VIDEO_SECONDS` | `180` | Maximum video duration; `.env.example` uses 120 (2 minutes) |
+| `MAX_DOWNLOAD_MB` | `300` | Source size limit; `.env.example` also uses 300 |
 | `MAX_OUTPUT_MB` | `49` | Telegram output limit; `.env.example` uses 45 |
 | `WORKERS` | `1` | Internal processing workers; keep at 1 on free Render |
 
@@ -151,5 +151,6 @@ ruff check .
 - Groq free quota နှင့် Edge TTS availability က provider အပြောင်းအလဲအလိုက် သက်ရောက်နိုင်သည်။ Bot သည် quota ပြည့်လျှင် paid plan သို့ auto-switch မလုပ်ပါ။
 - Audio/transcript ကို Groq သို့လည်းကောင်း၊ မြန်မာစာသားကို Edge TTS သို့လည်းကောင်း ပေးပို့သည်။ Private/sensitive content မတင်ပါနှင့်။
 - YouTube download ပိတ်ခံရလျှင် Telegram upload ကို အသုံးပြုနိုင်သည်။ Cookies လိုအပ်လာလျှင် secure secret file အနေဖြင့် သီးသန့်ပြင်ဆင်ပါ။
+- `MAX_DOWNLOAD_MB=300` သည် source ကန့်သတ်ချက်ဖြစ်ပြီး Telegram Bot API ၏ ကိုယ်ပိုင် file limits များကလည်း ဆက်လက်သက်ရောက်သည်။ Output ကို `MAX_OUTPUT_MB` အတိုင်း compress လုပ်သည်။ 300 MB/2-minute videos များကို Free Render တွင် process လုပ်ရာတွင် memory/timeout ပြဿနာ တက်လျှင် limit များကို ပြန်လျှော့ပါ။
 - ကိုယ်ပိုင် သို့မဟုတ် ခွင့်ပြုချက်ရထားသော content ကိုသာ အသုံးပြုပါ။ YouTube/TikTok terms နှင့် copyright ကို လိုက်နာပါ။
 - **TikTok direct posting သည် ဤ version တွင် မပါဝင်သေးပါ။** Official Content Posting API ၏ `video.publish` approval၊ OAuth နှင့် refresh-token rotation အတွက် persistent secure token storage လိုအပ်သည်။ Unaudited clients ၏ posts များလည်း private-only ဖြစ်နိုင်သည်။

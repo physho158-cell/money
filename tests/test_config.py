@@ -19,6 +19,7 @@ def test_default_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.default_voice == MALE_VOICE
     assert settings.video_enhance is True
     assert settings.max_video_seconds == 180
+    assert settings.max_download_bytes == 300 * 1024 * 1024
     assert settings.max_output_bytes == 49 * 1024 * 1024
     assert settings.groq_base_url == "https://api.groq.com/openai/v1"
     assert settings.app_mode == "polling"
